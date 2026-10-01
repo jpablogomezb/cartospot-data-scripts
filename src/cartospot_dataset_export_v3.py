@@ -22,8 +22,7 @@ Example
 -------
 python cartospot_dataset_export_v3.py \
   --dataset-url https://api.cartospot.com/api/v2/score/datasets/score-photobooth-coastal \
-  --submission-set contributions \
-  --output-dir ../outputs/exports
+  --submission-set contributions
 
 python cartospot_dataset_export_v3.py \
   --dataset-url "https://api.cartospot.com/api/v2/meitheal/datasets/loughlinstown-memory-map" \
@@ -51,6 +50,8 @@ import requests
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from project_paths import outputs_dir
 
 TIMEOUT = 60
 USER_AGENT = "CartoSpot Dataset Export/3.0"
@@ -827,8 +828,8 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="./exports",
-        help="Directory where export folders and files will be created",
+        default=str(outputs_dir("exports")),
+        help="Directory where export folders and files will be created (default: PROJECT_ROOT/outputs/exports)",
     )
     parser.add_argument(
         "--api-token",
