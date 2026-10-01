@@ -1,17 +1,17 @@
 # CartoSpot Dataset Export v3
 
-Utilidad de línea de comandos para exportar datasets geolocalizados de tipo **Place** desde la API de CartoSpot. Descarga los lugares, guarda sus geometrías y atributos y, opcionalmente, exporta un conjunto de **Submissions** asociado a cada lugar.
+A command-line utility for exporting geolocated **Place** datasets from the CartoSpot API. It retrieves Places, preserves their geometries and attributes, downloads files attached directly to Places, and can optionally export a selected **SubmissionSet** and its attachments.
 
-> **Comportamiento por defecto:** exporta los Places, sus adjuntos directos y los archivos GeoJSON/CSV/XLSX. **No consulta ni descarga Submissions** salvo que se especifique `--submission-set`.
+> **Default behavior:** exports Places, their direct attachments, and GeoJSON/CSV/XLSX files. **Submissions are not requested or downloaded** unless you specify `--submission-set`.
 
-## Requisitos
+## Requirements
 
-- Python 3.9 o superior.
-- Acceso HTTP(S) al endpoint de la API de CartoSpot.
-- Dependencias: `requests`, `pandas` y `openpyxl`.
-- El módulo local `project_paths.py`, importable desde el script, con la función `outputs_dir()`.
+- Python 3.9 or later.
+- HTTP(S) access to the relevant CartoSpot API endpoint.
+- Python packages: `requests`, `pandas`, and `openpyxl`.
+- A local `project_paths.py` module, importable by the script, providing `outputs_dir()`.
 
-### Organización recomendada
+### Recommended project layout
 
 ```text
 cartospot-scripts/
@@ -23,7 +23,7 @@ cartospot-scripts/
 └── .venv/
 ```
 
-Con el `project_paths.py` habitual del proyecto:
+The exporter uses the project's existing `project_paths.py`:
 
 ```python
 from pathlib import Path
@@ -42,11 +42,11 @@ def outputs_dir(*parts: str) -> Path:
     return path
 ```
 
-Cuando los dos archivos Python se encuentran en `src/`, la salida predeterminada es `<raíz-del-proyecto>/outputs/exports/`. El argumento `--output-dir` permite utilizar otra ruta.
+When both Python files are under `src/`, the default destination is `<project-root>/outputs/exports/`. You can override it using `--output-dir`.
 
-## Instalación
+## Installation
 
-Desde la raíz del proyecto:
+Run these commands from the project root:
 
 ```bash
 python3 -m venv .venv
@@ -54,24 +54,24 @@ source .venv/bin/activate    # macOS / Linux
 python -m pip install requests pandas openpyxl
 ```
 
-Si ya dispones de un entorno virtual y estas dependencias, reutilízalos.
+If you already have a virtual environment with the required packages, you can reuse it.
 
-## Uso rápido
+## Quick start
 
-**Importante:** pasa la **URL del dataset**, no la del mapa web. El script acepta también una URL terminada en `/places` y elimina ese sufijo para consultar primero la información del dataset.
+**Important:** pass the **dataset API URL**, not the public-facing map URL. The script also accepts a dataset URL ending in `/places` and removes that suffix before fetching dataset information.
 
-### 1. Exportar Places y fotografías, sin Submissions
+### 1. Export Places and photos, without Submissions
 
-Ejemplo: *Loughlinstown Memory Map*.
+Example: *Loughlinstown Memory Map*.
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
   --dataset-url "https://api.cartospot.com/api/v2/meitheal/datasets/loughlinstown-memory-map"
 ```
 
-Esto obtiene todos los Places que la API devuelve, conserva las geometrías y propiedades de cada lugar, descarga los adjuntos directos disponibles y genera los archivos GeoJSON, CSV y Excel. **No descarga Submissions.**
+This retrieves every Place returned by the API, preserves each Place's geometry and properties, downloads accessible files attached directly to Places, and creates GeoJSON, CSV, and Excel exports. **No Submissions are fetched.**
 
-### 2. Exportar Places y un conjunto de Submissions
+### 2. Export Places and a selected SubmissionSet
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -79,9 +79,9 @@ python src/cartospot_dataset_export_v3.py \
   --submission-set contributions
 ```
 
-`contributions` es un **ejemplo**: debe sustituirse por el nombre real de un `SubmissionSet` asociado a los Places del dataset. Cuando lo indicas, el exportador también consulta las URLs de ese conjunto por Place, genera los CSV/XLSX de las respuestas y descarga sus adjuntos. Si un Place no contiene ese conjunto, se exporta igualmente su fila de resumen.
+`contributions` is **only an example**: replace it with the actual `SubmissionSet` name associated with Places in your dataset. When supplied, the script additionally requests that set for each Place, writes submission CSV/XLSX files, and downloads associated submission attachments. Places without the requested set are still included in the dataset-level summary.
 
-Para inspeccionar los conjuntos visibles en el primer lugar (requiere `jq`):
+To inspect the submission sets exposed on the first Place (requires `jq`):
 
 ```bash
 curl -fsSL \
@@ -89,9 +89,11 @@ curl -fsSL \
   | jq '.features[0].properties.submission_sets'
 ```
 
-El primer lugar podría no tener todos los conjuntos disponibles en otros lugares: inspecciona más elementos de `features` si es necesario.
+The first Place may not contain every set used elsewhere in the dataset. Inspect additional entries in `features` if needed.
 
-### 3. Exportar datos sin descargar ningún adjunto
+### 3. Export data without downloading attachments
+
+To export Places only, with no downloaded files:
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -99,9 +101,9 @@ python src/cartospot_dataset_export_v3.py \
   --skip-place-attachments
 ```
 
-Sin `--submission-set`, este comando ya evita las Submissions; `--skip-place-attachments` omite además los archivos adjuntos directos. Las URLs originales permanecen en los datos exportados.
+Because `--submission-set` is omitted, this also skips Submissions. Original attachment URLs remain in the exported data.
 
-Si sí exportas Submissions y quieres omitir *ambos* tipos de adjuntos:
+If you **are** exporting Submissions and want to skip **both** kinds of attachments:
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -111,7 +113,7 @@ python src/cartospot_dataset_export_v3.py \
   --skip-attachment-download
 ```
 
-### 4. Elegir una carpeta de destino
+### 4. Choose a destination directory
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -119,13 +121,13 @@ python src/cartospot_dataset_export_v3.py \
   --output-dir "./backups"
 ```
 
-El script crea dentro del directorio indicado una carpeta propia con el formato `<dataset-slug>_<dataset-id>`.
+Within the chosen directory, the exporter creates a subdirectory named `<dataset-slug>_<dataset-id>`.
 
-### 5. Reutilizar o volver a descargar fotografías
+### 5. Reuse or refresh downloaded files
 
-En ejecuciones posteriores sobre la misma carpeta, reutiliza archivos de adjuntos ya existentes cuyo nombre coincida y tengan tamaño mayor que cero. Esto **no verifica** que su contenido sea idéntico al original.
+When rerun against the same output directory, the exporter reuses existing attachment files with matching names and a nonzero size. **This does not verify that the local file is identical to the remote copy.**
 
-Para forzar una nueva descarga de adjuntos:
+To download attachments again:
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -133,32 +135,32 @@ python src/cartospot_dataset_export_v3.py \
   --force
 ```
 
-Los archivos tabulares y JSON se vuelven a generar en cada ejecución.
+Tabular and JSON output files are regenerated on each run.
 
-## Parámetros
+## Command-line options
 
-| Argumento | Descripción |
+| Option | Description |
 | --- | --- |
-| `--dataset-url URL` | **Obligatorio.** Endpoint de un dataset de CartoSpot, normalmente sin `/places`. |
-| `--submission-set NAME` | **Opcional.** Exporta únicamente el conjunto de Submissions indicado para cada Place. Si se omite, no se consultan Submissions. |
-| `--output-dir PATH` | Directorio raíz de exportación. Predeterminado: `outputs_dir("exports")` definido en `project_paths.py`. |
-| `--skip-place-attachments` | No descarga adjuntos directamente asociados a los Places. |
-| `--skip-attachment-download` | No descarga adjuntos de Submissions; no impide la descarga de adjuntos directos de Place. |
-| `--force` | Descarga nuevamente los adjuntos, aunque existan archivos locales. |
-| `--delay-seconds N` | Pausa de `N` segundos después de cada solicitud; por defecto `0`. |
-| `--hide-noisy-fields` | Excluye algunos campos técnicos conocidos (como `csrfmiddlewaretoken`) de las columnas dinámicas tabulares; **no** modifica el GeoJSON. |
-| `--api-token TOKEN` | Token opcional para peticiones autenticadas; se envía como `Authorization: Token TOKEN`. |
-| `--help` | Muestra la ayuda del programa. |
+| `--dataset-url URL` | **Required.** CartoSpot dataset API endpoint, normally without `/places`. |
+| `--submission-set NAME` | **Optional.** Export only the named SubmissionSet for each Place. Omit it to export Places without requesting Submissions. |
+| `--output-dir PATH` | Export destination. Defaults to `outputs_dir("exports")` from `project_paths.py`. |
+| `--skip-place-attachments` | Do not download files attached directly to Places. |
+| `--skip-attachment-download` | Do not download Submission attachments; this does **not** affect direct Place attachments. |
+| `--force` | Download attachments again even when matching local files already exist. |
+| `--delay-seconds N` | Wait `N` seconds between requests; default: `0`. |
+| `--hide-noisy-fields` | Exclude selected technical fields (such as `csrfmiddlewaretoken`) from dynamic CSV/XLSX columns; the GeoJSON remains unchanged. |
+| `--api-token TOKEN` | Optional API token, sent as `Authorization: Token TOKEN`. |
+| `--help` | Display the command-line help. |
 
-También puedes consultar la ayuda directamente:
+For the built-in help:
 
 ```bash
 python src/cartospot_dataset_export_v3.py --help
 ```
 
-## Estructura de salida
+## Output structure
 
-Ejemplo orientativo para un dataset con un Place de ID `123` (el ID del dataset y los nombres reales dependen de la API):
+Illustrative output for a dataset containing Place ID `123` (actual dataset IDs and filenames depend on the API):
 
 ```text
 outputs/
@@ -175,62 +177,62 @@ outputs/
         └── loughlinstown-memory-map_<dataset-id>_place_123_<name>/
             ├── attachments/
             │   └── place_123_attachment_1_<hash>.jpg
-            ├── submission_attachments/            # Solo cuando corresponda
+            ├── submission_attachments/          # If applicable
             │   └── ...
-            ├── ..._contributions.csv              # Solo con --submission-set
-            └── ..._contributions.xlsx             # Solo con --submission-set
+            ├── ..._contributions.csv            # With --submission-set only
+            └── ..._contributions.xlsx           # With --submission-set only
 ```
 
-### Archivos principales
+### Main export files
 
-- **`places.geojson`**: una `FeatureCollection` que agrega las `features` originales obtenidas de todas las páginas. Conserva sus `geometry` y `properties` sin convertirlas a columnas; las respuestas de página completas, incluida su `metadata`, se almacenan separadamente en `api_pages/`.
-- **`api_pages/page_XXXX.json`**: respuesta JSON de cada página de Places, para consulta o auditoría.
-- **`*_places_summary.csv` y `.xlsx`**: una fila por Place, con coordenadas separadas (`longitude`, `latitude`), metadatos, adjuntos y campos personalizados prefijados con `place_custom__`. El libro Excel incluye hojas `data` y `metadata`.
-- **`attachments/`**: archivos asociados directamente a `properties.attachments` de un Place.
-- **`*_contributions.csv` y `.xlsx`** (o el nombre del conjunto seleccionado): una fila por Submission de ese conjunto, con propiedades personalizadas prefijadas con `submission_custom__` y referencias a sus adjuntos.
-- **`submission_attachments/`**: archivos asociados a las Submissions, cuando se solicita su descarga.
-- **`attachments_manifest.json`**: registro de los adjuntos descargados o reutilizados, indicando tipo (`place` o `submission`), identificadores, URL de origen, ruta local y estado.
-- **`backup_report.json`**: resumen del dataset, número de Places, conjunto de Submissions elegido, número de archivos registrados y errores de descarga de adjuntos.
+- **`places.geojson`** — an aggregated GeoJSON `FeatureCollection` containing the original Place `features` across all API pages, with their `geometry` and `properties` preserved. Full per-page responses, including pagination metadata, are stored under `api_pages/`.
+- **`api_pages/page_XXXX.json`** — the JSON response for each page of Places, retained for auditing or reference.
+- **`*_places_summary.csv` and `.xlsx`** — one row per Place, including separate `longitude` and `latitude` columns, metadata, attachment references, and custom fields prefixed with `place_custom__`. The Excel workbook has `data` and `metadata` worksheets.
+- **`attachments/`** — files referenced directly by a Place's `properties.attachments`.
+- **`*_<submission-set>.csv` and `.xlsx`** — one row per Submission in the chosen set, including custom fields prefixed with `submission_custom__` and attachment references.
+- **`submission_attachments/`** — files attached to Submissions, when requested.
+- **`attachments_manifest.json`** — a record of downloaded or reused attachments, including their source (`place` or `submission`), identifiers, original URL, local path, and download status.
+- **`backup_report.json`** — export summary with the Place count, selected SubmissionSet, attachment counts, and any attachment-download errors.
 
-Las URLs originales de fotografías se conservan en el GeoJSON y los CSV/XLSX; el archivo de manifiesto añade las rutas locales.
+Original image URLs are retained in the GeoJSON and tabular exports; the manifest provides the corresponding local paths.
 
-## Autenticación
+## Authentication
 
-Para endpoints que requieren autenticación, puedes usar `--api-token`, pero es preferible evitar escribir credenciales en comandos que queden en el historial del terminal. La v3 también acepta la variable de entorno `CARTOSPOT_API_TOKEN`:
+For authenticated endpoints, you can supply `--api-token`. To avoid putting credentials into your shell history, the exporter also accepts the `CARTOSPOT_API_TOKEN` environment variable:
 
 ```bash
-export CARTOSPOT_API_TOKEN="TU_TOKEN"
+export CARTOSPOT_API_TOKEN="YOUR_TOKEN"
 python src/cartospot_dataset_export_v3.py \
   --dataset-url "https://api.cartospot.com/api/v2/meitheal/datasets/loughlinstown-memory-map"
 ```
 
-El token no implica por sí solo que se incluyan registros privados o invisibles: el resultado depende de los permisos y de lo que devuelva la API. Este script no añade parámetros específicos para solicitar datos privados o invisibles.
+Providing a token does **not** automatically include invisible or private records. The exported content depends on API permissions and the API response. This script does not add separate query parameters to request private or invisible data.
 
-## Estado de ejecución y errores
+## Progress and error handling
 
-El proceso muestra el número de lugares encontrados y los archivos exportados. Si falla la descarga de algún adjunto, registra el fallo en `backup_report.json` y continúa con los demás adjuntos.
+The script prints progress information, including the number of Places retrieved and the files written. If an attachment cannot be downloaded, it records the error in `backup_report.json` and continues with other attachments.
 
-Códigos de salida de la v3:
+Exit codes:
 
-- `0`: exportación completada sin errores de descarga de adjuntos registrados.
-- `1`: error general o HTTP que impide completar la exportación.
-- `2`: exportación completada, pero uno o más adjuntos no pudieron descargarse.
+- `0` — export completed with no recorded attachment-download errors.
+- `1` — a general or HTTP error prevented the export from completing.
+- `2` — the export completed, but one or more attachments could not be downloaded.
 
-La descarga se realiza con reintentos HTTP, streaming y archivos temporales `.part`, que se sustituyen por el archivo definitivo al finalizar. La extensión se determina mediante la firma del archivo, la cabecera `Content-Type` o, en último término, la URL; los formatos no identificables pueden quedar como `.bin`.
+Downloads use HTTP retries, streaming, and temporary `.part` files that are renamed after completion. File types are inferred from file signatures, the `Content-Type` header, or the URL. Unidentified file types may use the `.bin` extension.
 
-## Alcance y limitaciones
+## Scope and limitations
 
-- Es un **exportador**: no modifica los registros remotos de CartoSpot.
-- Exporta los Places **que el endpoint entrega**. No es una exportación automática de todos los registros de la base de datos, incluidos los privados o invisibles.
-- `--submission-set` exporta **un conjunto por ejecución**; no selecciona automáticamente todos los conjuntos existentes.
-- Los adjuntos directos de Place y los de Submission se descargan por separado. No se recorren arbitrariamente todos los enlaces que puedan existir dentro de respuestas de formularios.
-- El GeoJSON agrega las entidades originales de las páginas; para conservar el JSON íntegro de cada respuesta HTTP utiliza `api_pages/`.
-- El formato CSV/XLSX facilita el análisis, pero no reemplaza el GeoJSON como representación geográfica completa.
-- La exportación no incluye por sí sola una copia íntegra de la configuración Django de la aplicación (por ejemplo, todos los modelos `PlaceType` o `PlaceQuestion`).
-- El manifiesto informa de errores de descarga de adjuntos, pero no verifica mediante checksum la integridad de archivos reutilizados.
-- Si los datos incluyen usuarios, comentarios o información personal, conserva las copias exportadas en una ubicación con los permisos adecuados.
+- The tool is an **exporter**; it does not modify remote CartoSpot records.
+- It exports the Places **returned by the API**, not necessarily every record stored in the underlying database (including invisible or private records).
+- `--submission-set` selects **one SubmissionSet per run**; it does not automatically export all available sets.
+- Direct Place attachments and Submission attachments are handled separately. The script does not follow arbitrary links contained in custom form responses.
+- `places.geojson` aggregates the original Place features. For the complete JSON of each API page, use `api_pages/`.
+- CSV/XLSX files are designed for tabular analysis and do not replace GeoJSON as a complete geographic representation.
+- This is not a full backup of the Django application configuration (for example, all `PlaceType` or `PlaceQuestion` records).
+- The manifest records download failures but does not checksum-verify reused files.
+- Exported datasets may contain user names, comments, or other personal information. Store them with appropriate access controls.
 
-## Ejemplo adicional: SCORE Photo Booth
+## Additional example: SCORE Photo Booth
 
 ```bash
 python src/cartospot_dataset_export_v3.py \
@@ -240,10 +242,10 @@ python src/cartospot_dataset_export_v3.py \
   --delay-seconds 0.3
 ```
 
-En este ejemplo se exportan los Places y, cuando exista el conjunto llamado `contributions`, sus Submissions y respectivos archivos adjuntos.
+This exports Places and, wherever the `contributions` set exists, its Submissions and their attachments.
 
 ---
 
 **Script:** `src/cartospot_dataset_export_v3.py`  
-**Módulo de rutas:** `src/project_paths.py`  
-**Destino predeterminado:** `outputs/exports/`
+**Path helper:** `src/project_paths.py`  
+**Default output directory:** `outputs/exports/`
