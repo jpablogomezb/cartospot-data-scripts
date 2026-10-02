@@ -1,0 +1,4 @@
+# Dependencies for the API split workflow; notebook UI is installed separately.
+pandas>=2.2,<4
+requests>=2.32,<3
+fiona>=1.10,<2

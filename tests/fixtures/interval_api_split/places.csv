@@ -1,0 +1,5 @@
+Id,location_type,tree_privacy,NTM_ID,tree_height,avg_tree_height,canopy_perimeter,canopy_area,geometry_x,geometry_y,dataset_id,dataset_name,url
+1,tree,,,5,,,,-6.1,53.1,306,Synthetic INTERVAL,https://example.test/places/1
+2,tree,,,5,,,,-6.2,53.1,306,Synthetic INTERVAL,https://example.test/places/2
+3,tree,,,5,,,,-6.3,53.1,306,Synthetic INTERVAL,https://example.test/places/3
+4,tree,,,5,,,,,53.1,306,Synthetic INTERVAL,https://example.test/places/4
