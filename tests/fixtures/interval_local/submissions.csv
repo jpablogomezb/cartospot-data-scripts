@@ -1,0 +1,5 @@
+Id,location_id,species,notes,url
+10,1,Oak,"Healthy, young tree",https://example.test/submissions/10
+11,2,Birch,NA,https://example.test/submissions/11
+12,2,Other,Árbol revisado,https://example.test/submissions/12
+13,99,Oak,Unmatched synthetic record,https://example.test/submissions/13
