@@ -1,0 +1,5 @@
+Id,location_id,does_a_tree_exist_here,species,tree_type,health,circumference,dbh,notes,image_url,submitter_name,other_species
+10,1,,Other,,,,,"Árbol, sano",,,  Oak  
+11,2,,Birch,,,,,"Árbol, sano",,,
+12,2,,Other,,,,,"Árbol, sano",,,   
+13,99,,Oak,,,,,"Árbol, sano",,,
